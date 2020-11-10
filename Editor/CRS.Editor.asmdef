@@ -1,0 +1,17 @@
+{
+    "name": "CRS.Editor",
+    "references": [
+        "GUID:bb2cfc877c7e049aa8c8b6bd89b243b3"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
