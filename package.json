@@ -1,25 +1,29 @@
 {
-  "name": "com.bidon.crs",
-  "displayName": "Condition reaction system",
-  "description": "Condition reaction system with editors tools for managing the interactions",
-  "author": "Dev",
-  "version": "0.0.1",
-  "unity": "2018.4",
-  "keywords": [
-    "unity",
-    "editor",
-    "condition",
-    "reaction",
-    "crs"
-  ],
-  "dependencies": {
-    "com.unity.textmeshpro": "2.0.1"
-  },
-  "samples": [
-    {
-      "displayName": "Examples",
-      "description": "A set of examples highlighting various features of the package",
-      "path": "Examples"
+	"name": "com.bidon.crs",
+	"displayName": "Condition reaction system",
+	"description": "Condition reaction system with editors tools for managing the interactions",
+	"author": "Dev",
+	"version": "0.0.2",
+	"unity": "2018.4",
+	"keywords": [
+		"unity",
+		"editor",
+		"condition",
+		"reaction",
+		"crs"
+	],
+	"dependencies": {
+		"com.unity.textmeshpro": "2.0.1"
+	},
+	"samples": [
+		{
+			"displayName": "Examples",
+			"description": "A set of examples highlighting various features of the package",
+			"path": "Examples"
+		}
+	],
+	"repository": {
+        "type": "git",
+        "url": "https://github.com/vlad3489/com.bidon.crs"
     }
-  ]
 }
