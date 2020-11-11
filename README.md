@@ -16,8 +16,43 @@ This repo is a modified version of condition system from [Adventure Game Tutoria
 
 ## Installation Guide
 
-- [Installation via UPM](Doc/Instalation-via-upm.md)
-- [Installation via Package (source code)](https://github.com/vlad3489/condition-reaction-system/releases)
+### Installing and using in Unity package manager
+
+Open `<project>/Packages/manifest.json`, add scope then add the package in the list of dependencies.
+```
+{
+	"dependencies": {
+		"com.unity.2d.sprite": "1.0.0",
+		"com.unity.addressables": "1.8.5",
+		...
+		"com.bidon.crs": "0.0.2"
+	},
+	"scopedRegistries": [
+		{
+			"name": "Unofficial Unity Package Manager Registry",
+			"url": "https://upm-packages.dev",
+			"scopes": [
+				"com.bidon.crs"
+			]
+		}
+	]
+}
+```
+Then open the Package Manager `Window > Package Manager` now you can choose version and update it
+
+### Installing by adding in manifest.json direct link
+
+Insert direct lint to the dependency section in `<project>/Packages/manifest.json`
+
+```
+{
+	"dependencies": {
+		"com.bidon.crs": "https://github.com/vlad3489/com.bidon.crs",
+		...
+	}
+}
+```
+Read more for selecting specific version in [Unity manual](https://docs.unity3d.com/Manual/upm-git.html)
 
 ## Using
 
