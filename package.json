@@ -3,7 +3,7 @@
 	"displayName": "Condition reaction system",
 	"description": "Condition reaction system with editors tools for managing the interactions",
 	"author": "Dev",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"unity": "2018.4",
 	"keywords": [
 		"unity",
