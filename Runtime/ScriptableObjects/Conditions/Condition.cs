@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace CRS
 {
@@ -8,6 +6,7 @@ namespace CRS
 	{
 		public string Description;
 		public bool IsSatisfied;
+		public bool DefaultValue;
 		public int Hash;
 	}
 }

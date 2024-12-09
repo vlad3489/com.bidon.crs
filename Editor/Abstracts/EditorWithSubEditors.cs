@@ -8,13 +8,14 @@ namespace CRS
 	// an array of ConditionCollectionEditors.
 	// It's generic types represent the type of Editor array that are
 	// nested within this Editor and the target type of those Editors.
-	public abstract class EditorWithSubEditors<TEditor, TTarget> : Editor
-		where TEditor : Editor
-		where TTarget : Object
+	public abstract class EditorWithSubEditors<TEditor, TTarget> : Editor where TEditor : Editor
+	                                                                      where TTarget : Object
 	{
-		protected TEditor[] subEditors;         // Array of Editors nested within this Editor.
+		protected TEditor[] subEditors;	// Array of Editors nested within this Editor.
 
-
+		// This must be overridden to provide any setup the subEditor needs when it is first created.
+		protected abstract void SubEditorSetup (TEditor editor);
+		
 		// This should be called in OnEnable and at the start of OnInspectorGUI.
 		protected void CheckAndCreateSubEditors (TTarget[] subEditorTargets)
 		{
@@ -35,8 +36,7 @@ namespace CRS
 				SubEditorSetup (subEditors[i]);
 			}
 		}
-
-
+		
 		// This should be called in OnDisable.
 		protected void CleanupEditors ()
 		{
@@ -53,9 +53,5 @@ namespace CRS
 			// Null the array so it's GCed.
 			subEditors = null;
 		}
-
-
-		// This must be overridden to provide any setup the subEditor needs when it is first created.
-		protected abstract void SubEditorSetup (TEditor editor);
 	}
 }

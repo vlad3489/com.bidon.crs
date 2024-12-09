@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb3c9773adb914c7c9b4ec6cf6f1997d, type: 3}
+  m_Name: AllConditions
+  m_EditorClassIdentifier: 
+  Conditions:
+  - {fileID: 2085789228443931889}
+  - {fileID: 5056040013620957302}
+  - {fileID: 8520945263188155618}
+  LevelsCondition:
+  - {fileID: 11400000, guid: 7671c9758ad62364ba89bb18c59e5af7, type: 2}
+  - {fileID: 11400000, guid: 7bf052f8907882146b8174661a3bcf3e, type: 2}
+--- !u!114 &2085789228443931889
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6efbf7f0edb1e4e26b014368e53d32dc, type: 3}
+  m_Name: KeyFounded
+  m_EditorClassIdentifier: 
+  Description: KeyFounded
+  IsSatisfied: 0
+  DefaultValue: 0
+  Hash: 151163245
+--- !u!114 &5056040013620957302
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6efbf7f0edb1e4e26b014368e53d32dc, type: 3}
+  m_Name: SpecialKeyFounded
+  m_EditorClassIdentifier: 
+  Description: SpecialKeyFounded
+  IsSatisfied: 0
+  DefaultValue: 0
+  Hash: 81180934
+--- !u!114 &8520945263188155618
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6efbf7f0edb1e4e26b014368e53d32dc, type: 3}
+  m_Name: MissionAccomplished
+  m_EditorClassIdentifier: 
+  Description: MissionAccomplished
+  IsSatisfied: 0
+  DefaultValue: 0
+  Hash: -1644125487

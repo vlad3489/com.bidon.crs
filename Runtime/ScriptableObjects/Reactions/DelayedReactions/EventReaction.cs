@@ -8,7 +8,7 @@ namespace CRS
 	public class EventReaction : DelayedReaction
 	{
 		public UnityEvent GenericUnityEvent;
-
+		
 		protected override void ImmediateReaction ()
 		{
 			GenericUnityEvent?.Invoke ();

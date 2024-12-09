@@ -14,23 +14,21 @@ namespace CRS
 	// There are two ways of adding Reactions to the ReactionCollection:
 	// a type selection popup with confirmation button and a drag and drop
 	// area.  Details on these are found below.
-	[CustomEditor (typeof (ReactionCollection))]
+	[CustomEditor(typeof(ReactionCollection))]
 	public class ReactionCollectionEditor : EditorWithSubEditors<ReactionEditor, Reaction>
 	{
-		private ReactionCollection _reactionCollection;                     // Reference to the target.
-		private SerializedProperty _reactionsProperty;                      // Represents the array of Reactions.
+		private ReactionCollection _reactionCollection;								// Reference to the target.
+		private SerializedProperty _reactionsProperty;								// Represents the array of Reactions.
 
-		private Type[] _reactionTypes;                                      // All the non-abstract types which inherit from Reaction.  This is used for adding new Reactions.
-		private string[] _reactionTypeNames;                                // The names of all appropriate Reaction types.
-		private int _selectedIndex;                                         // The index of the currently selected Reaction type.
+		private Type[] _reactionTypes;												// All the non-abstract types which inherit from Reaction.  This is used for adding new Reactions.
+		private string[] _reactionTypeNames;										// The names of all appropriate Reaction types.
+		private int _selectedIndex;													// The index of the currently selected Reaction type.
 
+		private ReorderableList _reordableList;										// Sorting orders list
+		private SerializedProperty _reactionsListProperty;							// Serialized property to communicate with editor
+		private bool _isFoldoutedOrderList = false;									// Foldout list
 
-
-		private ReorderableList _reordableList;                             // Sorting orders list
-		private SerializedProperty _reactionsListProperty;                  // Serialized property to comunicate with editor
-		private bool _isFoldoutedOrderList = false;                         // Foldout list
-
-		private SerializedProperty _useDebugProperties;                     // Flag use additional debug options
+		private SerializedProperty _useDebugProperties;								// Flag use additional debug options
 		private SerializedProperty _pauseEditorProperty;
 		private SerializedProperty _printExecutedReactionCollectionProperty;
 
@@ -38,18 +36,17 @@ namespace CRS
 		private float _verticalSpacing;
 		private float _lineHeight;
 
-		private const float DROP_HEIGHT = 50f;                              // Height in pixels of the area for dropping scripts.
-		private const float CONTROL_SPACING = 5f;                           // Width in pixels between the popup type selection and drop area.
-		private const string REACTIONS_PROP_NAME = "Reactions";             // Name of the field for the array of Reactions.
-		private const string REACTIONS_LIST_PROP_NAME = "ReactionsList";    // Name of the field for the array of Reactions.
+		private const float DROP_HEIGHT = 50f;										// Height in pixels of the area for dropping scripts.
+		private const float CONTROL_SPACING = 5f;									// Width in pixels between the popup type selection and drop area.
+		private const string REACTIONS_PROP_NAME = "Reactions";
+		private const string REACTIONS_LIST_PROP_NAME = "ReactionsList";
 		private const string REACTIONS_DEBUG_PROP_NAME = "UseDebugOptions";
 		private const string PAUSE_EDITOR_DEBUG_PROP_NAME = "PauseEditorOnReactionCollection";
 		private const string PRINT_REACTION_COLLECTION_DEBUG_PROP_NAME = "PrintExecutedReactionCollection";
 
 		private const string ITEM_PREFIX = "• ";
 
-
-		private void OnEnable ()
+		private void OnEnable()
 		{
 			// Cache the target.
 			_reactionCollection = (ReactionCollection)target;
@@ -61,124 +58,93 @@ namespace CRS
 			_lineHeight = EditorGUIUtility.singleLineHeight;
 
 			// Cache the SerializedProperties
-			_reactionsProperty = serializedObject.FindProperty (REACTIONS_PROP_NAME);
-			_reactionsListProperty = serializedObject.FindProperty (REACTIONS_LIST_PROP_NAME);
-			_useDebugProperties = serializedObject.FindProperty (REACTIONS_DEBUG_PROP_NAME);
-			_pauseEditorProperty = serializedObject.FindProperty (PAUSE_EDITOR_DEBUG_PROP_NAME);
-			_printExecutedReactionCollectionProperty = serializedObject.FindProperty (PRINT_REACTION_COLLECTION_DEBUG_PROP_NAME);
-
-
+			_reactionsProperty = serializedObject.FindProperty(REACTIONS_PROP_NAME);
+			_reactionsListProperty = serializedObject.FindProperty(REACTIONS_LIST_PROP_NAME);
+			_useDebugProperties = serializedObject.FindProperty(REACTIONS_DEBUG_PROP_NAME);
+			_pauseEditorProperty = serializedObject.FindProperty(PAUSE_EDITOR_DEBUG_PROP_NAME);
+			_printExecutedReactionCollectionProperty = serializedObject.FindProperty(PRINT_REACTION_COLLECTION_DEBUG_PROP_NAME);
+			
 			// If new editors are required for Reactions, create them.
-			CheckAndCreateSubEditors (_reactionCollection.Reactions);
+			CheckAndCreateSubEditors(_reactionCollection.Reactions);
 
 			// Set the array of types and type names of subtypes of Reaction.
-			SetReactionNamesArray ();
-
-
+			SetReactionNamesArray();
+			
 			// Populate for reorder list
-			PopulateReactionsList ();
+			PopulateReactionsList();
 
-			_reordableList = new ReorderableList (serializedObject, _reactionsListProperty, true, false, false, false);
+			_reordableList = new ReorderableList(serializedObject, _reactionsListProperty, true, false, false, false);
 			_reordableList.drawElementCallback = DrawListItems;
 			_reordableList.onReorderCallback = OnReordableCallback;
 		}
 
-		private void OnDisable ()
+		private void OnDisable()
 		{
 			// Destroy all the subeditors.
-			CleanupEditors ();
+			CleanupEditors();
 		}
-
-		private void PopulateReactionsList ()
-		{
-			_reactionCollection.ReactionsList = _reactionCollection.Reactions.ToList ();
-		}
-
-		// Reordable list
-		private void DrawListItems (Rect rect, int index, bool isActive, bool isFocused)
-		{
-			string displayName = _reactionCollection.Reactions[index].GetType ().ToString ().Split ('.').Last ();
-			EditorGUI.LabelField (new Rect (rect.x, rect.y, 200, _lineHeight), $"{displayName}");
-		}
-
-		// On Reordable list change
-		private void OnReordableCallback (ReorderableList reordableList)
-		{
-			// Update array
-			_reactionCollection.Reactions = _reactionCollection.ReactionsList.ToArray ();
-			OnDisable ();
-			OnEnable ();
-		}
-
-
-		// This is called immediately after each ReactionEditor is created.
-		protected override void SubEditorSetup (ReactionEditor editor)
-		{
-			// Make sure the ReactionEditors have a reference to the array that contains their targets.
-			editor.reactionsProperty = _reactionsProperty;
-			editor.reactionsListProperty = _reactionsListProperty;
-		}
-
-
-		public override void OnInspectorGUI ()
+		
+		// Draw custom inspector
+		public override void OnInspectorGUI()
 		{
 			// DrawDefaultInspector ();
 
 			// Pull all the information from the target into the serializedObject.
-			serializedObject.Update ();
+			serializedObject.Update();
 
-			Rect defaultsRect = EditorGUILayout.BeginVertical ();
-			GUI.Box (defaultsRect, /* No label. */"");
+			Rect defaultsRect = EditorGUILayout.BeginVertical();
+			GUI.Box(defaultsRect, /* No label. */"");
 
 			// Draw tooltip buttons for handling reaction
-			EditorGUILayout.HelpBox ("Reaction is multiple actions based on Conditions", MessageType.Info);
+			EditorGUILayout.HelpBox("Reaction is multiple actions based on Conditions", MessageType.Info);
 
 			// Draw reaction handling buttons
-			GUILayout.BeginHorizontal ();
+			GUILayout.BeginHorizontal();
 			if (Application.isPlaying)
 			{
-				if (GUILayout.Button ("REACT"))
+				if (GUILayout.Button("REACT"))
 				{
-					_reactionCollection.React ();
+					_reactionCollection.React();
 				}
 			}
 
-			if (GUILayout.Button ("Focus on object!"))
+			if (GUILayout.Button("Focus on object!"))
 			{
-				EditorGUIUtility.PingObject (_reactionCollection.gameObject.gameObject);
+				EditorGUIUtility.PingObject(_reactionCollection.gameObject.gameObject);
 			}
 
-			GUILayout.EndHorizontal ();
-			EditorGUILayout.EndVertical ();
-
-
+			GUILayout.EndHorizontal();
+			EditorGUILayout.EndVertical();
+			
 			// Draw description
-			EditorGUILayout.BeginVertical (GUI.skin.box);
-			EditorGUILayout.LabelField ("Description:");
-			_reactionCollection.Description = EditorGUILayout.TextArea (_reactionCollection.Description, GUILayout.Height (_lineHeight * 3));
-			EditorGUILayout.EndVertical ();
-
-
+			EditorGUILayout.BeginVertical(GUI.skin.box);
+			EditorGUILayout.LabelField("Collection description:");
+			_reactionCollection.Description = EditorGUILayout.TextArea(_reactionCollection.Description, GUILayout.Height(_lineHeight * 3));
+			EditorGUILayout.EndVertical();
+			
+			EditorGUILayout.Space(20);
+			EditorGUILayout.LabelField("Reactions:");
+			
 			// If new editors for Reactions are required, create them.
-			CheckAndCreateSubEditors (_reactionCollection.Reactions);
+			CheckAndCreateSubEditors(_reactionCollection.Reactions);
 
 			// Display all the Reactions.
 			for (int i = 0; i < subEditors.Length; i++)
 			{
-				subEditors[i].OnInspectorGUI ();
+				subEditors[i].OnInspectorGUI();
 			}
 
 			// Show paste button
-			DisplayPasteButton ();
+			DisplayPasteButton();
 
 			// If there are Reactions, add a space.
 			if (_reactionCollection.Reactions.Length > 0)
 			{
-				EditorGUILayout.Space (20);
+				EditorGUILayout.Space(20);
 			}
 
 			// Create a Rect for the full width of the inspector with enough height for the drop area.
-			Rect fullWidthRect = GUILayoutUtility.GetRect (GUIContent.none, GUIStyle.none, GUILayout.Height (DROP_HEIGHT + _verticalSpacing));
+			Rect fullWidthRect = GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, GUILayout.Height(DROP_HEIGHT + _verticalSpacing));
 
 			// Create a Rect for the left GUI controls.
 			Rect leftAreaRect = fullWidthRect;
@@ -200,63 +166,93 @@ namespace CRS
 			rightAreaRect.x += rightAreaRect.width + CONTROL_SPACING;
 
 			// Display the GUI for the type popup and button on the left.
-			TypeSelectionGUI (leftAreaRect);
+			TypeSelectionGUI(leftAreaRect);
 
 			// Display the GUI for the drag and drop area on the right.
-			DragAndDropAreaGUI (rightAreaRect);
+			DragAndDropAreaGUI(rightAreaRect);
 
 			// Manage the events for dropping on the right area.
-			DraggingAndDropping (rightAreaRect, this);
+			DraggingAndDropping(rightAreaRect, this);
 
 			// Draw reordable list .DoLayoutList ();
-			DrawReordableListGUI ();
+			DrawReordableListGUI();
 
-			DisplayDebugOptions ();
+			DisplayDebugOptions();
 
 			// Push the information back from the serializedObject to the target.
-			serializedObject.ApplyModifiedProperties ();
+			serializedObject.ApplyModifiedProperties();
+		}
+		
+		
+
+		private void PopulateReactionsList()
+		{
+			_reactionCollection.ReactionsList = _reactionCollection.Reactions.ToList();
 		}
 
-
-		private void DisplayPasteButton ()
+		// Reordable list
+		private void DrawListItems(Rect rect, int index, bool isActive, bool isFocused)
 		{
-			GUILayout.BeginHorizontal ();
-			GUILayout.FlexibleSpace ();
+			string displayName = _reactionCollection.Reactions[index].GetType().ToString().Split('.').Last();
+			EditorGUI.LabelField(new Rect(rect.x, rect.y, 200, _lineHeight), $"{displayName}");
+		}
+
+		// On Reordable list change
+		private void OnReordableCallback(ReorderableList reordableList)
+		{
+			// Update array
+			_reactionCollection.Reactions = _reactionCollection.ReactionsList.ToArray();
+			OnDisable();
+			OnEnable();
+		}
+		
+		// This is called immediately after each ReactionEditor is created.
+		protected override void SubEditorSetup(ReactionEditor editor)
+		{
+			// Make sure the ReactionEditors have a reference to the array that contains their targets.
+			editor.reactionsProperty = _reactionsProperty;
+			editor.reactionsListProperty = _reactionsListProperty;
+		}
+		
+		private void DisplayPasteButton()
+		{
+			GUILayout.BeginHorizontal();
+			GUILayout.FlexibleSpace();
 
 			GUIStyle centredStyle = GUI.skin.button;
 			centredStyle.alignment = TextAnchor.MiddleCenter;
 			centredStyle.normal.textColor = GUI.skin.button.normal.textColor;
 
 			// Paste copied reaction from clipboard
-			if (GUILayout.Button ("Paste copied\n reaction from clipboard", centredStyle, GUILayout.Height (40)))
+			if (GUILayout.Button("Paste copied\n reaction from clipboard", centredStyle, GUILayout.Height(40)))
 			{
 				try
 				{
 					string bufferValue = EditorGUIUtility.systemCopyBuffer;
-					var obj = EditorUtility.InstanceIDToObject (Int32.Parse (bufferValue)) as Reaction;
+					var obj = EditorUtility.InstanceIDToObject(Int32.Parse(bufferValue)) as Reaction;
 
 					if (obj != null)
 					{
-						Reaction reactionCopy = Instantiate (obj);
-						_reactionsProperty.AddToObjectArray (reactionCopy);
-						_reactionsListProperty.AddToObjectArray (reactionCopy);
+						Reaction reactionCopy = Instantiate(obj);
+						_reactionsProperty.AddToObjectArray(reactionCopy);
+						_reactionsListProperty.AddToObjectArray(reactionCopy);
 					}
 					else
 					{
-						Debug.LogWarning ("Can't paste object! Copied object is not derived from reaction");
+						Debug.LogWarning("Can't paste object! Copied object is not derived from reaction");
 					}
 				}
 				catch (FormatException)
 				{
-					Debug.LogWarning ("Paste object error! Wrong Instance ID format");
+					Debug.LogWarning("Paste object error! Wrong Instance ID format");
 				}
 			}
 
-			GUILayout.EndHorizontal ();
+			GUILayout.EndHorizontal();
 		}
 
 
-		private void TypeSelectionGUI (Rect containingRect)
+		private void TypeSelectionGUI(Rect containingRect)
 		{
 			// Create Rects for the top and bottom half.
 			Rect topHalf = containingRect;
@@ -265,21 +261,20 @@ namespace CRS
 			bottomHalf.y += bottomHalf.height;
 
 			// Display a popup in the top half showing all the reaction types.
-			_selectedIndex = EditorGUI.Popup (topHalf, _selectedIndex, _reactionTypeNames);
+			_selectedIndex = EditorGUI.Popup(topHalf, _selectedIndex, _reactionTypeNames);
 
 			// Display a button in the bottom half that if clicked...
-			if (GUI.Button (bottomHalf, "Add Selected Reaction"))
+			if (GUI.Button(bottomHalf, "Add Selected Reaction"))
 			{
 				// ... finds the type selected by the popup, creates an appropriate reaction and adds it to the array.
 				Type reactionType = _reactionTypes[_selectedIndex];
-				Reaction newReaction = ReactionEditor.CreateReaction (reactionType);
-				_reactionsProperty.AddToObjectArray (newReaction);
-				_reactionsListProperty.AddToObjectArray (newReaction);
+				Reaction newReaction = ReactionEditor.CreateReaction(reactionType);
+				_reactionsProperty.AddToObjectArray(newReaction);
+				_reactionsListProperty.AddToObjectArray(newReaction);
 			}
 		}
-
-
-		private static void DragAndDropAreaGUI (Rect containingRect)
+		
+		private static void DragAndDropAreaGUI(Rect containingRect)
 		{
 			// Create a GUI style of a box but with middle aligned text and button text color.
 			GUIStyle centredStyle = GUI.skin.box;
@@ -287,18 +282,19 @@ namespace CRS
 			centredStyle.normal.textColor = GUI.skin.button.normal.textColor;
 
 			// Draw a box over the area with the created style.
-			GUI.Box (containingRect, "Drop new Reactions script here", centredStyle);
+			GUI.Box(containingRect, "Drop new Reactions script here", centredStyle);
 		}
 
-
-		private static void DraggingAndDropping (Rect dropArea, ReactionCollectionEditor editor)
+		private static void DraggingAndDropping(Rect dropArea, ReactionCollectionEditor editor)
 		{
 			// Cache the current event.
 			Event currentEvent = Event.current;
 
 			// If the drop area doesn't contain the mouse then return.
-			if (!dropArea.Contains (currentEvent.mousePosition))
+			if (!dropArea.Contains(currentEvent.mousePosition))
+			{
 				return;
+			}
 
 			switch (currentEvent.type)
 			{
@@ -306,10 +302,10 @@ namespace CRS
 				case EventType.DragUpdated:
 
 					// ... change whether or not the drag *can* be performed by changing the visual mode of the cursor based on the IsDragValid function.
-					DragAndDrop.visualMode = IsDragValid () ? DragAndDropVisualMode.Link : DragAndDropVisualMode.Rejected;
+					DragAndDrop.visualMode = IsDragValid() ? DragAndDropVisualMode.Link : DragAndDropVisualMode.Rejected;
 
 					// Make sure the event isn't used by anything else.
-					currentEvent.Use ();
+					currentEvent.Use();
 
 					break;
 
@@ -317,7 +313,7 @@ namespace CRS
 				case EventType.DragPerform:
 
 					// ... accept the drag event.
-					DragAndDrop.AcceptDrag ();
+					DragAndDrop.AcceptDrag();
 
 					// Go through all the objects that were being dragged...
 					for (int i = 0; i < DragAndDrop.objectReferences.Length; i++)
@@ -326,36 +322,35 @@ namespace CRS
 						MonoScript script = DragAndDrop.objectReferences[i] as MonoScript;
 
 						// ... then find the type of that Reaction...
-						Type reactionType = script.GetClass ();
+						Type reactionType = script.GetClass();
 
 						// ... and create a Reaction of that type and add it to the array.
-						Reaction newReaction = ReactionEditor.CreateReaction (reactionType);
-						editor._reactionsProperty.AddToObjectArray (newReaction);
+						Reaction newReaction = ReactionEditor.CreateReaction(reactionType);
+						editor._reactionsProperty.AddToObjectArray(newReaction);
 					}
 
 					// Make sure the event isn't used by anything else.
-					currentEvent.Use ();
+					currentEvent.Use();
 
 					break;
 			}
 		}
 
-
-		private static bool IsDragValid ()
+		private static bool IsDragValid()
 		{
 			// Go through all the objects being dragged...
 			for (int i = 0; i < DragAndDrop.objectReferences.Length; i++)
 			{
 				// ... and if any of them are not script assets, return that the drag is invalid.
-				if (DragAndDrop.objectReferences[i].GetType () != typeof (MonoScript))
+				if (DragAndDrop.objectReferences[i].GetType() != typeof(MonoScript))
 					return false;
 
 				// Otherwise find the class contained in the script asset.
 				MonoScript script = DragAndDrop.objectReferences[i] as MonoScript;
-				Type scriptType = script.GetClass ();
+				Type scriptType = script.GetClass();
 
 				// If the script does not inherit from Reaction, return that the drag is invalid.
-				if (!scriptType.IsSubclassOf (typeof (Reaction)))
+				if (!scriptType.IsSubclassOf(typeof(Reaction)))
 					return false;
 
 				// If the script is an abstract, return that the drag is invalid.
@@ -366,63 +361,60 @@ namespace CRS
 			// If none of the dragging objects returned that the drag was invalid, return that it is valid.
 			return true;
 		}
-
-
-		private void SetReactionNamesArray ()
+		
+		private void SetReactionNamesArray()
 		{
 			// Store the Reaction type.
-			Type reactionType = typeof (Reaction);
+			Type reactionType = typeof(Reaction);
 
 			// Get all the types that are in the same Assembly (all the runtime scripts) as the Reaction type.
-			Type[] allTypes = reactionType.Assembly.GetTypes ();
+			Type[] allTypes = reactionType.Assembly.GetTypes();
 
 			// Create an empty list to store all the types that are subtypes of Reaction.
-			List<Type> reactionSubTypeList = new List<Type> ();
+			List<Type> reactionSubTypeList = new List<Type>();
 
 			// Go through all the types in the Assembly...
 			for (int i = 0; i < allTypes.Length; i++)
 			{
 				// ... and if they are a non-abstract subclass of Reaction then add them to the list.
-				if (allTypes[i].IsSubclassOf (reactionType) && !allTypes[i].IsAbstract)
+				if (allTypes[i].IsSubclassOf(reactionType) && !allTypes[i].IsAbstract)
 				{
-					reactionSubTypeList.Add (allTypes[i]);
+					reactionSubTypeList.Add(allTypes[i]);
 				}
 			}
 
 			// Convert the list to an array and store it.
-			_reactionTypes = reactionSubTypeList.ToArray ();
+			_reactionTypes = reactionSubTypeList.ToArray();
 
 			// Create an empty list of strings to store the names of the Reaction types.
-			List<string> reactionTypeNameList = new List<string> ();
+			List<string> reactionTypeNameList = new List<string>();
 
 			// Go through all the Reaction types and add their names to the list.
 			for (int i = 0; i < _reactionTypes.Length; i++)
 			{
-				reactionTypeNameList.Add (_reactionTypes[i].Name);
+				reactionTypeNameList.Add(_reactionTypes[i].Name);
 			}
 
 			// Convert the list to an array and store it.
-			_reactionTypeNames = reactionTypeNameList.ToArray ();
+			_reactionTypeNames = reactionTypeNameList.ToArray();
 		}
 
-
-		private void DrawReordableListGUI ()
+		private void DrawReordableListGUI()
 		{
-			EditorGUILayout.Space ();
-			_isFoldoutedOrderList = EditorGUILayout.Foldout (_isFoldoutedOrderList, "Reactions order");
+			EditorGUILayout.Space();
+			_isFoldoutedOrderList = EditorGUILayout.Foldout(_isFoldoutedOrderList, "Reactions order");
 			if (_isFoldoutedOrderList)
 			{
-				_reordableList.DoLayoutList ();
+				_reordableList.DoLayoutList();
 			}
 		}
 
-
-		private void DisplayDebugOptions ()
+		private void DisplayDebugOptions()
 		{
-			EditorGUILayout.Space ();
+			EditorGUILayout.Space();
 
 			// Show/Hide Additions options
-			EditorGUILayout.PropertyField (_useDebugProperties);
+			EditorGUILayout.PropertyField(_useDebugProperties);
 
 			if (!_useDebugProperties.boolValue)
 			{
@@ -431,16 +423,16 @@ namespace CRS
 
 			//EditorGUI.indentLevel++;
 
-			Rect optionsRect = EditorGUILayout.BeginVertical ();
-			optionsRect = EditorGUI.IndentedRect (optionsRect);
-			GUI.Box (optionsRect, "");
-			EditorGUILayout.Space ();
+			Rect optionsRect = EditorGUILayout.BeginVertical();
+			optionsRect = EditorGUI.IndentedRect(optionsRect);
+			GUI.Box(optionsRect, "");
+			EditorGUILayout.Space();
 
-			EditorGUILayout.PropertyField (_pauseEditorProperty, new GUIContent (ITEM_PREFIX + "Pause Editor", "Pause editor on reache this reaction collection"));
-			EditorGUILayout.PropertyField (_printExecutedReactionCollectionProperty, new GUIContent (ITEM_PREFIX + "Print reaction", "Print reaction collection"));
+			EditorGUILayout.PropertyField(_pauseEditorProperty, new GUIContent(ITEM_PREFIX + "Pause Editor", "Pause editor on reache this reaction collection"));
+			EditorGUILayout.PropertyField(_printExecutedReactionCollectionProperty, new GUIContent(ITEM_PREFIX + "Print reaction", "Print reaction collection"));
 
-			EditorGUILayout.Space ();
-			EditorGUILayout.EndVertical ();
+			EditorGUILayout.Space();
+			EditorGUILayout.EndVertical();
 
 			//EditorGUI.indentLevel--;
 
